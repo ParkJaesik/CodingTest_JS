@@ -15,7 +15,7 @@ public class CodingTest {
 		int[] answer = solution(id_list,report,k);
 		System.out.println( Arrays.toString( answer));
 	}
-	
+	//코딩테스트 1번
 	public static void solution2() {
         
 		String[] id_list = {"muzi", "frodo", "apeach", "neo"};
