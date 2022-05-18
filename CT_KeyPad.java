@@ -26,7 +26,7 @@ public class CT_KeyPad {
 		Map<String, int[]> keyMap = new HashMap<String, int[]>();
 		StringBuilder sb = new StringBuilder();
 		
-		
+		//각 키의 좌표 입력
 		keyMap.put("1", new int[] {1,1});
 		keyMap.put("2", new int[] {1,2});
 		keyMap.put("3", new int[] {1,3});
@@ -47,6 +47,7 @@ public class CT_KeyPad {
 		int lp = 0;
 		for( int i =0; i<numbers.length; i ++){
 			
+			//입력 키 의 좌표 검사 후 오른손,왼손 좌표도 같이 입력
 			if(numbers[i] == 1 || numbers[i] == 4 || numbers[i] == 7){
 				sb.append("L");
 				leftHand = keyMap.get(numbers[i]+"");
@@ -58,8 +59,9 @@ public class CT_KeyPad {
 				
 				currentKey = keyMap.get(numbers[i]+"");
 				
-				rp =  (int) Math.pow((currentKey[0] - rightHand[0]),2)+ (int) Math.pow((currentKey[1] - rightHand[1]),2); 
-				lp =  (int) Math.pow((currentKey[0] - leftHand[0]),2)+ (int) Math.pow((currentKey[1] - leftHand[1]),2); 
+				//현재 키의 좌표와 오른손,왼손의 좌표로 거리 계산
+				rp =  Math.abs(currentKey[0] - rightHand[0])+ Math.abs(currentKey[1] - rightHand[1]); 
+				lp =  Math.abs(currentKey[0] - leftHand[0]) + Math.abs(currentKey[1] - leftHand[1]); 
 				
 				if( rp > lp){
 					sb.append("L");
