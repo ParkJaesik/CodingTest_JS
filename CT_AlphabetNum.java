@@ -1,6 +1,9 @@
 package ctTest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -19,9 +22,8 @@ public class CT_AlphabetNum {
 	
 	public static int solution(String s){
 		
-		
+		List<String> list = new ArrayList<String>();
 		int answer = 0;
-		
 		s=s.replace("zero", "0");
 		s=s.replace("one", "1");
 		s=s.replace("two", "2");
