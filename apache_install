@@ -1,0 +1,153 @@
+Apache
+설치환경: AWS EC2- Amazon Linux 2
+(1) apr (Apache Portable Runtime ) , apr-util
+
+아파치 2.0을 설치할 때는 yum으로 apr, apri-util을 설치하지 않았음
+아파치 2.4 이상에서는 apr, apr-util이 없기 때문에 별도로 설치해야 함.
+(2) PCRE
+
+PCRE( Perl Compatible Regular Expressions )는 펄 호환 정규 표현식으로서, 정규식 패턴 일치를 구현하는 함수의 집합
+요즘에는 Apache, PHP, KDE 등을 포함한 오프 소스 프로젝트에서 사용되고 있으며, 아파치 2.4 버전을 설치할 때는 pcre를 설치해야 한다.
+1. 의존성 설치
+sudo yum -y install gcc make gcc-c++ pcre-devel openssl-devel expat-devel
+2. Apache 설치
+# /tmp/lib 디렉토리 이동 웹에서 필요파일 다운로드
+cd /tmp
+mkdir lib
+
+# 아파치 공식홈페이지를 통한 다운로드 & 압축해제
+# https://www.pcre.org/
+wget https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz/download
+tar xvfz download
+
+# Apache 설치 & 압축해제
+wget https://mirror.navercorp.com/apache//httpd/httpd-2.4.48.tar.gz
+tar xvfz httpd-2.4.48.tar.gz
+----
+# APR 설치 & 압축해제
+wget https://mirror.navercorp.com/apache//apr/apr-1.7.0.tar.gz
+tar xvfz apr-1.7.0.tar.gz
+
+# APR-util 설치 & 압축해제
+wget https://mirror.navercorp.com/apache//apr/apr-util-1.6.1.tar.gz
+tar xvfz apr-util-1.6.1.tar.gz
+
+# /tmp/lib 내용 확인
+[root@test-web1 lib]# pwd
+/tmp/lib
+[root@test-web1 lib]# ls
+apr-1.7.0  apr-1.7.0.tar.gz  apr-1.7.0.tar.gz.1  download  httpd-2.4.48  httpd-2.4.48.tar.gz  pcre-8.45
+
+
+디렉토리 이동
+
+# 압축을 푼 4개 디렉터리를 /usr/local/src로 이동
+mv apr-1.7.0 apr-util-1.6.1 httpd-2.4.48 pcre-8.45 /usr/local/src
+
+# ./configure = Install을 하기 위한 환경을 설정하는 프로그램
+APR 설치
+
+# APR 설치
+cd /usr/local/src/apr-1.7.0
+
+# ./configure = 설치를 위한 환경 설정 | --prefix = 절대경로 --with 라이브러리 참조
+# 절대경로 지정
+./configure --prefix=/usr/local/src/apr-1.7.0 
+
+# make = configure에 의해 만들어진 makefile로 프로그램 컴파일
+# make install = 컴파일된 프로그램, 환경파일, 데이터 파일을 지정된 위치에 복사하는 과정
+
+make && make install
+
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /usr/local/src/apr-1.7.0/lib
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the '-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the 'LD_LIBRARY_PATH' environment variable
+     during execution
+   - add LIBDIR to the 'LD_RUN_PATH' environment variable
+     during linking
+   - use the '-Wl,-rpath -Wl,LIBDIR' linker flag
+   - have your system administrator add LIBDIR to '/etc/ld.so.conf'
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+APR-UTIL 설치
+
+# APR-UTIL 경로 이동
+cd /usr/local/src/apr-util-1.6.1
+
+# 반드시 --with 뒤에 내가 설치한 APR 버전을 넣는다
+./configure --prefix=/usr/local/src/apr-util-1.6.1 --with-apr=/usr/local/src/apr-1.7.0
+
+# 설치
+make && make install
+PCRE 설치
+
+cd /usr/local/src/pcre-8.45
+
+# 반드시 --with 뒤에 내가 설치한 APR 버전을 넣는다
+./configure --prefix=/usr/local/src/apr-util-1.6.1 --with-apr=/usr/local/src/apr-1.7.0
+
+make && make install
+아파치(httpd) 설치
+
+cd /usr/local/src/httpd-2.4.48
+
+./configure --prefix=/usr/local/apache2 --enable-modules=most --enable-mods-shared=all --enable-so --with-apr=/usr/local/src/apr-1.7.0 --with-apr-util=/usr/local/src/apr-util-1.6.1
+
+make && make install
+
+# 서버 이름 설정
+vim /usr/local/apache2/conf/httpd.conf
+
+# ServerName 을 검색해서 아래와 같이수정
+----
+ServerName 127.0.0.1:80
+
+# Deny access to the entirety of your server's filesystem. You must
+# explicitly permit access to web content directories in other 
+# <Directory> blocks below.
+
+<Directory />
+    AllowOverride none
+#   Require all denied
+    Require all granted
+</Directory>
+
+----
+
+# <Directory>: https://httpd.apache.org/docs/2.4/en/mod/mod_authz_core.html#require
+
+# 서버 이름 설정 안할시 나타나는 에러
+AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using fe80::fe:64ff:fe01:513a%eth0. Set the 'ServerName' directive globally to suppress this message
+
+
+실행하기
+
+# 아파치 시작
+/usr/local/apache2/bin/httpd -k start
+
+netstat -tulpn | listen LISTEN
+
+[root@test-web1 bin]# netstat -tulpn | grep LISTEN
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      3054/sshd           
+tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      2895/master         
+tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      2477/rpcbind        
+tcp6       0      0 :::80                   :::*                    LISTEN      5799/httpd          
+tcp6       0      0 :::22                   :::*                    LISTEN      3054/sshd           
+tcp6       0      0 :::111                  :::*                    LISTEN      2477/rpcbind
+
+[root@test-web1 bin]# ps -ef | grep httpd
+root      5799     1  0 07:21 ?        00:00:00 /usr/local/apache2/bin/httpd -k start
+daemon    5800  5799  0 07:21 ?        00:00:00 /usr/local/apache2/bin/httpd -k start
+daemon    5801  5799  0 07:21 ?        00:00:00 /usr/local/apache2/bin/httpd -k start
+daemon    5802  5799  0 07:21 ?        00:00:00 /usr/local/apache2/bin/httpd -k start
+root      5926  3253  0 07:25 pts/0    00:00:00 grep --color=auto httpd
+
+systemctl list-unit-files | grep httpd
